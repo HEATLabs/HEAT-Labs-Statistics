@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     // API endpoints
-    const STATS_API_URL = 'https://pcwstats-pixel-api.vercel.app/api/stats';
-    const PIXEL_MAPPING_URL = 'https://raw.githubusercontent.com/PCWStats/Website-Configs/refs/heads/main/tracking-pixel.json';
-    const GSC_INDEX_URL = 'https://raw.githubusercontent.com/PCWStats/Website-Configs/refs/heads/main/gsc-index.json';
+    const STATS_API_URL = 'https://heatlabs-pixel-api.vercel.app/api/stats';
+    const PIXEL_MAPPING_URL = 'https://raw.githubusercontent.com/HEATLabs/Website-Configs/refs/heads/main/tracking-pixel.json';
+    const GSC_INDEX_URL = 'https://raw.githubusercontent.com/HEATLabs/Website-Configs/refs/heads/main/gsc-index.json';
 
     // DOM elements
     const totalViewsEl = document.getElementById('totalViews');
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function isPageIndexed(htmlFile) {
         if (!gscIndexData?.data?.pages) return false;
 
-        const pageUrl = `https://pcwstats.github.io/${htmlFile}`;
+        const pageUrl = `https://heatlabs.github.io/${htmlFile}`;
         return gscIndexData.data.pages.some(page =>
             page.url === pageUrl &&
             page.indexing_state === 'INDEXED' &&
