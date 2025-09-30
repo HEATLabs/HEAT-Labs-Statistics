@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update summary cards with error state
         totalViewsEl.textContent = 'N/A';
         todaysViewsEl.textContent = 'N/A';
-        trackedPagesEl.textContent = '0';
+        trackedPagesEl.textContent = 'N/A';
         mostPopularViewsEl.textContent = 'N/A';
         mostPopularPageEl.textContent = 'Data unavailable';
 
@@ -493,7 +493,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateSummaryCards() {
-        if (dataLoadFailed) return;
+        if (dataLoadFailed) {
+            totalViewsEl.textContent = 'N/A';
+            todaysViewsEl.textContent = 'N/A';
+            trackedPagesEl.textContent = 'N/A';
+            mostPopularViewsEl.textContent = 'N/A';
+            mostPopularPageEl.textContent = 'Data unavailable';
+            return;
+        }
 
         const totalViews = processedData.reduce((sum, page) => sum + page.totalViews, 0);
         const todaysViews = processedData.reduce((sum, page) => sum + page.todaysViews, 0);
