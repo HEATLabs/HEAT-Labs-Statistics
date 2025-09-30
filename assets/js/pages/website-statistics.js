@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const isMainPage = [
                     'tournaments.html',
                     'tanks.html',
-                    'tankopedia.html',
+                    'asset-gallery.html',
                     'strategy-planner.html',
                     'news.html',
                     'maps.html',
