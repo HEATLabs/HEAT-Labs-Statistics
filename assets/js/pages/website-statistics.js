@@ -230,6 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'tournaments.html',
                     'tanks.html',
                     'asset-gallery.html',
+                    'agents.html',
                     'strategy-planner.html',
                     'news.html',
                     'maps.html',
