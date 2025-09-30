@@ -333,6 +333,91 @@
               </div>
             </div>
           </div>
+          <!-- CDN Summary Cards -->
+          <div class="stats-summary-grid">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-download"></i>
+              </div>
+              <div class="stat-content">
+                <h3>Configs Requests</h3>
+                <div class="stat-value" id="configsRequests">0</div>
+                <div class="stat-description">Total CDN requests</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-download"></i>
+              </div>
+              <div class="stat-content">
+                <h3>Images Requests</h3>
+                <div class="stat-value" id="imagesRequests">0</div>
+                <div class="stat-description">Total CDN requests</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-download"></i>
+              </div>
+              <div class="stat-content">
+                <h3>Database Requests</h3>
+                <div class="stat-value" id="databaseRequests">0</div>
+                <div class="stat-description">Total CDN requests</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-download"></i>
+              </div>
+              <div class="stat-content">
+                <h3>Sounds Requests</h3>
+                <div class="stat-value" id="soundsRequests">0</div>
+                <div class="stat-description">Total CDN requests</div>
+              </div>
+            </div>
+          </div>
+          <div class="stats-summary-grid">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-network-wired"></i>
+              </div>
+              <div class="stat-content">
+                <h3>Configs Bandwidth</h3>
+                <div class="stat-value" id="configsBandwidth">0 MB</div>
+                <div class="stat-description">Total CDN bandwidth</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-network-wired"></i>
+              </div>
+              <div class="stat-content">
+                <h3>Images Bandwidth</h3>
+                <div class="stat-value" id="imagesBandwidth">0 MB</div>
+                <div class="stat-description">Total CDN bandwidth</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-network-wired"></i>
+              </div>
+              <div class="stat-content">
+                <h3>Database Bandwidth</h3>
+                <div class="stat-value" id="databaseBandwidth">0 MB</div>
+                <div class="stat-description">Total CDN bandwidth</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-network-wired"></i>
+              </div>
+              <div class="stat-content">
+                <h3>Sounds Bandwidth</h3>
+                <div class="stat-value" id="soundsBandwidth">0 MB</div>
+                <div class="stat-description">Total CDN bandwidth</div>
+              </div>
+            </div>
+          </div>
           <!-- Charts Section -->
           <div class="charts-grid">
             <div class="chart-container full-width-chart">
@@ -354,6 +439,23 @@
             <div class="chart-container half-width-chart">
               <h3>Indexed vs Tracked Pages</h3>
               <canvas id="indexedPagesChart"></canvas>
+            </div>
+            <!-- CDN Charts -->
+            <div class="chart-container half-width-chart">
+              <h3>Configs CDN Stats (Last 30 Days)</h3>
+              <canvas id="configsCdnChart"></canvas>
+            </div>
+            <div class="chart-container half-width-chart">
+              <h3>Images CDN Stats (Last 30 Days)</h3>
+              <canvas id="imagesCdnChart"></canvas>
+            </div>
+            <div class="chart-container half-width-chart">
+              <h3>Database CDN Stats (Last 30 Days)</h3>
+              <canvas id="databaseCdnChart"></canvas>
+            </div>
+            <div class="chart-container half-width-chart">
+              <h3>Sounds CDN Stats (Last 30 Days)</h3>
+              <canvas id="soundsCdnChart"></canvas>
             </div>
           </div>
           <!-- Detailed Stats Table -->
