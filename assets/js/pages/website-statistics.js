@@ -213,13 +213,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const [configsResponse, imagesResponse, databaseResponse, soundsResponse] = await Promise.all([
             fetch(CDN_CONFIGS_URL).catch(error => {
-                console.warn('Configs CDN API failed:', error);
+                console.warn('Config CDN API failed:', error);
                 return {
                     ok: false
                 };
             }),
             fetch(CDN_IMAGES_URL).catch(error => {
-                console.warn('Images CDN API failed:', error);
+                console.warn('Image CDN API failed:', error);
                 return {
                     ok: false
                 };
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
             }),
             fetch(CDN_SOUNDS_URL).catch(error => {
-                console.warn('Sounds CDN API failed:', error);
+                console.warn('Sound CDN API failed:', error);
                 return {
                     ok: false
                 };
@@ -242,14 +242,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (configsResponse.ok) {
             cdnData.configs = await configsResponse.json();
         } else {
-            console.warn('Configs CDN data not available');
+            console.warn('Config CDN data not available');
             cdnData.configs = null;
         }
 
         if (imagesResponse.ok) {
             cdnData.images = await imagesResponse.json();
         } else {
-            console.warn('Images CDN data not available');
+            console.warn('Image CDN data not available');
             cdnData.images = null;
         }
 
@@ -263,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (soundsResponse.ok) {
             cdnData.sounds = await soundsResponse.json();
         } else {
-            console.warn('Sounds CDN data not available');
+            console.warn('Sound CDN data not available');
             cdnData.sounds = null;
         }
 
@@ -367,11 +367,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderCdnErrorCharts() {
         const cdnChartContainers = [{
                 element: configsCdnChartEl,
-                title: 'Configs CDN Stats (Last 30 Days)'
+                title: 'Config CDN Stats (Last 30 Days)'
             },
             {
                 element: imagesCdnChartEl,
-                title: 'Images CDN Stats (Last 30 Days)'
+                title: 'Image CDN Stats (Last 30 Days)'
             },
             {
                 element: databaseCdnChartEl,
@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             {
                 element: soundsCdnChartEl,
-                title: 'Sounds CDN Stats (Last 30 Days)'
+                title: 'Sound CDN Stats (Last 30 Days)'
             }
         ];
 
@@ -577,10 +577,10 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        renderCdnChart('configs', configsCdnChartEl, 'Configs CDN Stats');
-        renderCdnChart('images', imagesCdnChartEl, 'Images CDN Stats');
+        renderCdnChart('configs', configsCdnChartEl, 'Config CDN Stats');
+        renderCdnChart('images', imagesCdnChartEl, 'Image CDN Stats');
         renderCdnChart('database', databaseCdnChartEl, 'Database CDN Stats');
-        renderCdnChart('sounds', soundsCdnChartEl, 'Sounds CDN Stats');
+        renderCdnChart('sounds', soundsCdnChartEl, 'Sound CDN Stats');
     }
 
     function renderCdnChart(type, chartElement, title) {
