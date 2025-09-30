@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPage = 1;
     const itemsPerPage = 10;
     let filteredData = [];
+    let dataLoadFailed = false;
 
     // Initialize the page
     async function init() {
@@ -71,13 +72,30 @@ document.addEventListener('DOMContentLoaded', function() {
             updateLoadingProgress(20);
 
             const [statsResponse, mappingResponse, gscResponse] = await Promise.all([
-                fetch(STATS_API_URL),
-                fetch(PIXEL_MAPPING_URL),
-                fetch(GSC_INDEX_URL)
+                fetch(STATS_API_URL).catch(error => {
+                    console.warn('Stats API failed:', error);
+                    return {
+                        ok: false
+                    };
+                }),
+                fetch(PIXEL_MAPPING_URL).catch(error => {
+                    console.warn('Pixel mapping API failed:', error);
+                    return {
+                        ok: false
+                    };
+                }),
+                fetch(GSC_INDEX_URL).catch(error => {
+                    console.warn('GSC index API failed:', error);
+                    return {
+                        ok: false
+                    };
+                })
             ]);
 
-            if (!statsResponse.ok || !mappingResponse.ok || !gscResponse.ok) {
-                throw new Error('Failed to fetch data');
+            // Check if any critical API failed
+            if (!statsResponse.ok || !mappingResponse.ok) {
+                dataLoadFailed = true;
+                throw new Error('Critical APIs failed to load');
             }
 
             updateLoadingProgress(40);
@@ -85,7 +103,19 @@ document.addEventListener('DOMContentLoaded', function() {
             updateLoadingProgress(50);
             pixelMapping = await mappingResponse.json();
             updateLoadingProgress(60);
-            gscIndexData = await gscResponse.json();
+
+            // GSC data is optional, so handle gracefully
+            if (gscResponse.ok) {
+                gscIndexData = await gscResponse.json();
+            } else {
+                gscIndexData = {
+                    data: {
+                        pages: []
+                    }
+                };
+                console.warn('GSC index data not available, using fallback');
+            }
+
             updateLoadingProgress(70);
 
             processData();
@@ -102,9 +132,86 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(hideLoading, 300);
         } catch (error) {
             console.error('Error loading data:', error);
-            showError();
+            dataLoadFailed = true;
+            showErrorState();
             hideLoading();
         }
+    }
+
+    function showErrorState() {
+        // Add error state to summary cards
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach(card => card.classList.add('error-state'));
+
+        // Update summary cards with error state
+        totalViewsEl.textContent = 'N/A';
+        todaysViewsEl.textContent = 'N/A';
+        trackedPagesEl.textContent = '0';
+        mostPopularViewsEl.textContent = 'N/A';
+        mostPopularPageEl.textContent = 'Data unavailable';
+
+        // Render error placeholders for charts
+        renderErrorCharts();
+
+        // Clear table and show message
+        statsTableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="error-message-cell">
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Failed to load statistics data</span>
+                        <small>The statistics API is currently unavailable. Please try again later.</small>
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        // Disable controls
+        pageSearch.disabled = true;
+        sortBy.disabled = true;
+        prevPageBtn.disabled = true;
+        nextPageBtn.disabled = true;
+    }
+
+    function renderErrorCharts() {
+        const chartContainers = [{
+                element: dailyViewsChartEl,
+                title: 'Daily Views (Last 30 Days)'
+            },
+            {
+                element: topPagesChartEl,
+                title: 'Top Pages by Views'
+            },
+            {
+                element: viewsByTimeChartEl,
+                title: 'Views by Time Period'
+            },
+            {
+                element: indexedPagesChartEl,
+                title: 'Indexed vs Tracked Pages'
+            },
+            {
+                element: viewsByCategoryChartEl,
+                title: 'Views by Category (Last 30 Days)'
+            }
+        ];
+
+        chartContainers.forEach(({
+            element,
+            title
+        }) => {
+            if (element && element.parentNode) {
+                const container = element.parentNode;
+                container.innerHTML = `
+                    <h3>${title}</h3>
+                    <div class="chart-error-placeholder">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Failed to load chart data</p>
+                        <small>Statistics API is currently unavailable</small>
+                    </div>
+                `;
+            }
+        });
     }
 
     function processData() {
@@ -220,6 +327,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function renderCharts() {
+        if (dataLoadFailed) {
+            renderErrorCharts();
+            return;
+        }
+
         renderDailyViewsChart();
         renderTopPagesChart();
         renderViewsByTimeChart();
@@ -479,6 +591,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function renderTable() {
+        if (dataLoadFailed) {
+            return;
+        }
+
         applySorting();
         const totalPages = Math.ceil(filteredData.length / itemsPerPage);
         const startIndex = (currentPage - 1) * itemsPerPage;
@@ -528,6 +644,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function setupEventListeners() {
         pageSearch.addEventListener('input', () => {
+            if (dataLoadFailed) return;
+
             const searchTerm = pageSearch.value.toLowerCase();
             filteredData = searchTerm ?
                 processedData.filter(page =>
@@ -539,11 +657,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         sortBy.addEventListener('change', () => {
+            if (dataLoadFailed) return;
             currentPage = 1;
             renderTable();
         });
 
         prevPageBtn.addEventListener('click', () => {
+            if (dataLoadFailed) return;
             if (currentPage > 1) {
                 currentPage--;
                 renderTable();
@@ -551,6 +671,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         nextPageBtn.addEventListener('click', () => {
+            if (dataLoadFailed) return;
             const totalPages = Math.ceil(filteredData.length / itemsPerPage);
             if (currentPage < totalPages) {
                 currentPage++;
@@ -559,6 +680,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         statsTableBody.addEventListener('click', (e) => {
+            if (dataLoadFailed) return;
             if (e.target.closest('.view-details-btn')) {
                 const pageName = e.target.closest('.view-details-btn').dataset.page;
                 viewPageDetails(pageName);
@@ -642,10 +764,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateLoadingProgress(percent) {
         loadingProgressBar.style.width = `${percent}%`;
-    }
-
-    function showError() {
-        alert('Failed to load statistics data. Please try again later.');
     }
 
     init();
