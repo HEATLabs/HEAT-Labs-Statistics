@@ -4,6 +4,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const PIXEL_MAPPING_URL = 'https://raw.githubusercontent.com/HEATLabs/Website-Configs/refs/heads/main/tracking-pixel.json';
     const GSC_INDEX_URL = 'https://raw.githubusercontent.com/HEATLabs/Website-Configs/refs/heads/main/gsc-index.json';
 
+    // CDN API endpoints
+    const CDN_CONFIGS_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Configs';
+    const CDN_IMAGES_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images';
+    const CDN_DATABASE_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Database-Files';
+    const CDN_SOUNDS_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Sound-Bank';
+
     // DOM elements
     const totalViewsEl = document.getElementById('totalViews');
     const todaysViewsEl = document.getElementById('todaysViews');
@@ -21,6 +27,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const prevPageBtn = document.getElementById('prevPage');
     const nextPageBtn = document.getElementById('nextPage');
     const pageInfo = document.getElementById('pageInfo');
+
+    // CDN DOM elements
+    const configsRequestsEl = document.getElementById('configsRequests');
+    const imagesRequestsEl = document.getElementById('imagesRequests');
+    const databaseRequestsEl = document.getElementById('databaseRequests');
+    const soundsRequestsEl = document.getElementById('soundsRequests');
+    const configsBandwidthEl = document.getElementById('configsBandwidth');
+    const imagesBandwidthEl = document.getElementById('imagesBandwidth');
+    const databaseBandwidthEl = document.getElementById('databaseBandwidth');
+    const soundsBandwidthEl = document.getElementById('soundsBandwidth');
+    const configsCdnChartEl = document.getElementById('configsCdnChart');
+    const imagesCdnChartEl = document.getElementById('imagesCdnChart');
+    const databaseCdnChartEl = document.getElementById('databaseCdnChart');
+    const soundsCdnChartEl = document.getElementById('soundsCdnChart');
 
     // Loading overlay
     const loadingOverlay = document.createElement('div');
@@ -59,83 +79,198 @@ document.addEventListener('DOMContentLoaded', function() {
     let statsData = {};
     let pixelMapping = {};
     let gscIndexData = {};
+    let cdnData = {
+        configs: null,
+        images: null,
+        database: null,
+        sounds: null
+    };
     let processedData = [];
     let currentPage = 1;
     const itemsPerPage = 10;
     let filteredData = [];
     let dataLoadFailed = false;
+    let cdnDataLoadFailed = false;
+
+    // Format bytes to human readable
+    function formatBytes(bytes) {
+        if (bytes === 0) return '0 B';
+
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
 
     // Initialize the page
     async function init() {
         try {
             showLoading();
-            updateLoadingProgress(20);
+            updateLoadingProgress(10);
 
-            const [statsResponse, mappingResponse, gscResponse] = await Promise.all([
-                fetch(STATS_API_URL).catch(error => {
-                    console.warn('Stats API failed:', error);
-                    return {
-                        ok: false
-                    };
-                }),
-                fetch(PIXEL_MAPPING_URL).catch(error => {
-                    console.warn('Pixel mapping API failed:', error);
-                    return {
-                        ok: false
-                    };
-                }),
-                fetch(GSC_INDEX_URL).catch(error => {
-                    console.warn('GSC index API failed:', error);
-                    return {
-                        ok: false
-                    };
-                })
+            // Load main stats and CDN stats in parallel
+            const [mainStatsResult, cdnStatsResult] = await Promise.allSettled([
+                loadMainStats(),
+                loadCdnStats()
             ]);
 
-            // Check if any critical API failed
-            if (!statsResponse.ok || !mappingResponse.ok) {
-                dataLoadFailed = true;
-                throw new Error('Critical APIs failed to load');
-            }
+            updateLoadingProgress(90);
 
-            updateLoadingProgress(40);
-            statsData = await statsResponse.json();
-            updateLoadingProgress(50);
-            pixelMapping = await mappingResponse.json();
-            updateLoadingProgress(60);
-
-            // GSC data is optional, so handle gracefully
-            if (gscResponse.ok) {
-                gscIndexData = await gscResponse.json();
+            // Handle main stats result
+            if (mainStatsResult.status === 'fulfilled') {
+                dataLoadFailed = false;
             } else {
-                gscIndexData = {
-                    data: {
-                        pages: []
-                    }
-                };
-                console.warn('GSC index data not available, using fallback');
+                console.error('Main stats failed:', mainStatsResult.reason);
+                dataLoadFailed = true;
+                showErrorState();
             }
 
-            updateLoadingProgress(70);
+            // Handle CDN stats result
+            if (cdnStatsResult.status === 'fulfilled') {
+                cdnDataLoadFailed = false;
+            } else {
+                console.error('CDN stats failed:', cdnStatsResult.reason);
+                cdnDataLoadFailed = true;
+                showCdnErrorState();
+            }
 
-            processData();
-            updateLoadingProgress(80);
-            updateSummaryCards();
-            updateLoadingProgress(85);
-            renderCharts();
             updateLoadingProgress(95);
-            renderTable();
-            updateLoadingProgress(100);
             setupEventListeners();
+            updateLoadingProgress(100);
 
             // Small delay before hiding to ensure everything is rendered
             setTimeout(hideLoading, 300);
         } catch (error) {
             console.error('Error loading data:', error);
             dataLoadFailed = true;
+            cdnDataLoadFailed = true;
             showErrorState();
+            showCdnErrorState();
             hideLoading();
         }
+    }
+
+    async function loadMainStats() {
+        updateLoadingProgress(20);
+
+        const [statsResponse, mappingResponse, gscResponse] = await Promise.all([
+            fetch(STATS_API_URL).catch(error => {
+                console.warn('Stats API failed:', error);
+                return {
+                    ok: false
+                };
+            }),
+            fetch(PIXEL_MAPPING_URL).catch(error => {
+                console.warn('Pixel mapping API failed:', error);
+                return {
+                    ok: false
+                };
+            }),
+            fetch(GSC_INDEX_URL).catch(error => {
+                console.warn('GSC index API failed:', error);
+                return {
+                    ok: false
+                };
+            })
+        ]);
+
+        // Check if any critical API failed
+        if (!statsResponse.ok || !mappingResponse.ok) {
+            throw new Error('Critical APIs failed to load');
+        }
+
+        updateLoadingProgress(40);
+        statsData = await statsResponse.json();
+        updateLoadingProgress(50);
+        pixelMapping = await mappingResponse.json();
+        updateLoadingProgress(60);
+
+        // GSC data is optional, so handle gracefully
+        if (gscResponse.ok) {
+            gscIndexData = await gscResponse.json();
+        } else {
+            gscIndexData = {
+                data: {
+                    pages: []
+                }
+            };
+            console.warn('GSC index data not available, using fallback');
+        }
+
+        updateLoadingProgress(70);
+        processData();
+        updateLoadingProgress(75);
+        updateSummaryCards();
+        updateLoadingProgress(80);
+        renderCharts();
+        updateLoadingProgress(85);
+        renderTable();
+    }
+
+    async function loadCdnStats() {
+        updateLoadingProgress(25);
+
+        const [configsResponse, imagesResponse, databaseResponse, soundsResponse] = await Promise.all([
+            fetch(CDN_CONFIGS_URL).catch(error => {
+                console.warn('Configs CDN API failed:', error);
+                return {
+                    ok: false
+                };
+            }),
+            fetch(CDN_IMAGES_URL).catch(error => {
+                console.warn('Images CDN API failed:', error);
+                return {
+                    ok: false
+                };
+            }),
+            fetch(CDN_DATABASE_URL).catch(error => {
+                console.warn('Database CDN API failed:', error);
+                return {
+                    ok: false
+                };
+            }),
+            fetch(CDN_SOUNDS_URL).catch(error => {
+                console.warn('Sounds CDN API failed:', error);
+                return {
+                    ok: false
+                };
+            })
+        ]);
+
+        // Handle each CDN response individually
+        if (configsResponse.ok) {
+            cdnData.configs = await configsResponse.json();
+        } else {
+            console.warn('Configs CDN data not available');
+            cdnData.configs = null;
+        }
+
+        if (imagesResponse.ok) {
+            cdnData.images = await imagesResponse.json();
+        } else {
+            console.warn('Images CDN data not available');
+            cdnData.images = null;
+        }
+
+        if (databaseResponse.ok) {
+            cdnData.database = await databaseResponse.json();
+        } else {
+            console.warn('Database CDN data not available');
+            cdnData.database = null;
+        }
+
+        if (soundsResponse.ok) {
+            cdnData.sounds = await soundsResponse.json();
+        } else {
+            console.warn('Sounds CDN data not available');
+            cdnData.sounds = null;
+        }
+
+        updateLoadingProgress(65);
+        updateCdnSummaryCards();
+        updateLoadingProgress(75);
+        renderCdnCharts();
     }
 
     function showErrorState() {
@@ -173,6 +308,21 @@ document.addEventListener('DOMContentLoaded', function() {
         nextPageBtn.disabled = true;
     }
 
+    function showCdnErrorState() {
+        // Update CDN summary cards with error state
+        configsRequestsEl.textContent = 'N/A';
+        imagesRequestsEl.textContent = 'N/A';
+        databaseRequestsEl.textContent = 'N/A';
+        soundsRequestsEl.textContent = 'N/A';
+        configsBandwidthEl.textContent = 'N/A';
+        imagesBandwidthEl.textContent = 'N/A';
+        databaseBandwidthEl.textContent = 'N/A';
+        soundsBandwidthEl.textContent = 'N/A';
+
+        // Render error placeholders for CDN charts
+        renderCdnErrorCharts();
+    }
+
     function renderErrorCharts() {
         const chartContainers = [{
                 element: dailyViewsChartEl,
@@ -208,6 +358,43 @@ document.addEventListener('DOMContentLoaded', function() {
                         <i class="fas fa-exclamation-triangle"></i>
                         <p>Failed to load chart data</p>
                         <small>Statistics API is currently unavailable</small>
+                    </div>
+                `;
+            }
+        });
+    }
+
+    function renderCdnErrorCharts() {
+        const cdnChartContainers = [{
+                element: configsCdnChartEl,
+                title: 'Configs CDN Stats (Last 30 Days)'
+            },
+            {
+                element: imagesCdnChartEl,
+                title: 'Images CDN Stats (Last 30 Days)'
+            },
+            {
+                element: databaseCdnChartEl,
+                title: 'Database CDN Stats (Last 30 Days)'
+            },
+            {
+                element: soundsCdnChartEl,
+                title: 'Sounds CDN Stats (Last 30 Days)'
+            }
+        ];
+
+        cdnChartContainers.forEach(({
+            element,
+            title
+        }) => {
+            if (element && element.parentNode) {
+                const container = element.parentNode;
+                container.innerHTML = `
+                    <h3>${title}</h3>
+                    <div class="chart-error-placeholder">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Failed to load CDN data</p>
+                        <small>CDN API is currently unavailable</small>
                     </div>
                 `;
             }
@@ -306,6 +493,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateSummaryCards() {
+        if (dataLoadFailed) return;
+
         const totalViews = processedData.reduce((sum, page) => sum + page.totalViews, 0);
         const todaysViews = processedData.reduce((sum, page) => sum + page.todaysViews, 0);
 
@@ -329,6 +518,46 @@ document.addEventListener('DOMContentLoaded', function() {
         mostPopularPageEl.textContent = mostPopular.pageName;
     }
 
+    function updateCdnSummaryCards() {
+        if (cdnDataLoadFailed) return;
+
+        // Update configs
+        if (cdnData.configs) {
+            configsRequestsEl.textContent = cdnData.configs.hits.total.toLocaleString();
+            configsBandwidthEl.textContent = formatBytes(cdnData.configs.bandwidth.total);
+        } else {
+            configsRequestsEl.textContent = 'N/A';
+            configsBandwidthEl.textContent = 'N/A';
+        }
+
+        // Update images
+        if (cdnData.images) {
+            imagesRequestsEl.textContent = cdnData.images.hits.total.toLocaleString();
+            imagesBandwidthEl.textContent = formatBytes(cdnData.images.bandwidth.total);
+        } else {
+            imagesRequestsEl.textContent = 'N/A';
+            imagesBandwidthEl.textContent = 'N/A';
+        }
+
+        // Update database
+        if (cdnData.database) {
+            databaseRequestsEl.textContent = cdnData.database.hits.total.toLocaleString();
+            databaseBandwidthEl.textContent = formatBytes(cdnData.database.bandwidth.total);
+        } else {
+            databaseRequestsEl.textContent = 'N/A';
+            databaseBandwidthEl.textContent = 'N/A';
+        }
+
+        // Update sounds
+        if (cdnData.sounds) {
+            soundsRequestsEl.textContent = cdnData.sounds.hits.total.toLocaleString();
+            soundsBandwidthEl.textContent = formatBytes(cdnData.sounds.bandwidth.total);
+        } else {
+            soundsRequestsEl.textContent = 'N/A';
+            soundsBandwidthEl.textContent = 'N/A';
+        }
+    }
+
     function renderCharts() {
         if (dataLoadFailed) {
             renderErrorCharts();
@@ -340,6 +569,139 @@ document.addEventListener('DOMContentLoaded', function() {
         renderViewsByTimeChart();
         renderIndexedPagesChart();
         renderViewsByCategoryChart();
+    }
+
+    function renderCdnCharts() {
+        if (cdnDataLoadFailed) {
+            renderCdnErrorCharts();
+            return;
+        }
+
+        renderCdnChart('configs', configsCdnChartEl, 'Configs CDN Stats');
+        renderCdnChart('images', imagesCdnChartEl, 'Images CDN Stats');
+        renderCdnChart('database', databaseCdnChartEl, 'Database CDN Stats');
+        renderCdnChart('sounds', soundsCdnChartEl, 'Sounds CDN Stats');
+    }
+
+    function renderCdnChart(type, chartElement, title) {
+        const data = cdnData[type];
+        if (!data) {
+            if (chartElement && chartElement.parentNode) {
+                const container = chartElement.parentNode;
+                container.innerHTML = `
+                    <h3>${title} (Last 30 Days)</h3>
+                    <div class="chart-error-placeholder">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Failed to load CDN data</p>
+                        <small>${type} CDN data is unavailable</small>
+                    </div>
+                `;
+            }
+            return;
+        }
+
+        const dates = [];
+        const today = new Date();
+
+        for (let i = 29; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            dates.push(date.toISOString().split('T')[0]);
+        }
+
+        const hitsData = dates.map(date => data.hits.dates[date] || 0);
+        const bandwidthData = dates.map(date => data.bandwidth.dates[date] || 0);
+
+        const displayDates = dates.map(date => {
+            const [year, month, day] = date.split('-');
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${monthNames[parseInt(month) - 1]} ${parseInt(day)}`;
+        });
+
+        new Chart(chartElement, {
+            type: 'line',
+            data: {
+                labels: displayDates,
+                datasets: [{
+                        label: 'Requests',
+                        data: hitsData,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        tension: 0.3,
+                        fill: true,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Bandwidth',
+                        data: bandwidthData,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        tension: 0.3,
+                        fill: true,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.datasetIndex === 0) {
+                                    label += context.raw.toLocaleString() + ' requests';
+                                } else {
+                                    label += formatBytes(context.raw);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Requests'
+                        },
+                        ticks: {
+                            precision: 0
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Bandwidth'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return formatBytes(value);
+                            }
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
     }
 
     function renderDailyViewsChart() {
