@@ -300,6 +300,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (path.includes('tournaments/')) return 'Tournaments';
         if (path.includes('resources/')) return 'Resources';
         if (path.includes('easter-eggs/')) return 'Easter Eggs';
+        if (path.includes('playground/')) return 'Playground';
+        if (path.includes('agents/')) return 'Agents';
         return 'Other';
     }
 
