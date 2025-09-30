@@ -187,20 +187,6 @@
 	background-color: var(--bg-secondary);
 }
 
-/* Stat card error states */
-.stat-card.error-state {
-	opacity: 0.7;
-}
-
-.stat-card.error-state .stat-value {
-	color: var(--text-secondary);
-}
-
-.stat-card.error-state .stat-icon {
-	background-color: var(--bg-secondary);
-	color: var(--text-secondary);
-}
-
 /* Detailed Stats */
 .detailed-stats {
 	background-color: var(--card-bg);
