@@ -6,7 +6,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // CDN API endpoints
     const CDN_CONFIGS_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Configs';
-    const CDN_IMAGES_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images';
+    const CDN_IMAGES_URLS = [
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Tanks',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Maps',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-News',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Features',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Guides',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Blogs',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Gallery',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Tournaments'
+    ];
     const CDN_DATABASE_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Database-Files';
     const CDN_SOUNDS_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Sound-Bank';
 
@@ -211,34 +221,34 @@ document.addEventListener('DOMContentLoaded', function() {
     async function loadCdnStats() {
         updateLoadingProgress(25);
 
-        const [configsResponse, imagesResponse, databaseResponse, soundsResponse] = await Promise.all([
+        // Fetch all image repos
+        const imagePromises = CDN_IMAGES_URLS.map(url =>
+            fetch(url).catch(error => {
+                console.warn('Image CDN API failed:', error);
+                return { ok: false };
+            })
+        );
+
+        const [configsResponse, ...imageResponses] = await Promise.all([
             fetch(CDN_CONFIGS_URL).catch(error => {
                 console.warn('Config CDN API failed:', error);
-                return {
-                    ok: false
-                };
+                return { ok: false };
             }),
-            fetch(CDN_IMAGES_URL).catch(error => {
-                console.warn('Image CDN API failed:', error);
-                return {
-                    ok: false
-                };
-            }),
+            ...imagePromises,
             fetch(CDN_DATABASE_URL).catch(error => {
                 console.warn('Database CDN API failed:', error);
-                return {
-                    ok: false
-                };
+                return { ok: false };
             }),
             fetch(CDN_SOUNDS_URL).catch(error => {
                 console.warn('Sound CDN API failed:', error);
-                return {
-                    ok: false
-                };
+                return { ok: false };
             })
         ]);
 
-        // Handle each CDN response individually
+        const databaseResponse = imageResponses.pop();
+        const soundsResponse = imageResponses.pop();
+
+        // Handle configs
         if (configsResponse.ok) {
             cdnData.configs = await configsResponse.json();
         } else {
@@ -246,13 +256,22 @@ document.addEventListener('DOMContentLoaded', function() {
             cdnData.configs = null;
         }
 
-        if (imagesResponse.ok) {
-            cdnData.images = await imagesResponse.json();
+        // Handle images, aggregate all repos
+        const imageDataArray = [];
+        for (const response of imageResponses) {
+            if (response.ok) {
+                imageDataArray.push(await response.json());
+            }
+        }
+
+        if (imageDataArray.length > 0) {
+            cdnData.images = aggregateImageData(imageDataArray);
         } else {
-            console.warn('Image CDN data not available');
+            console.warn('No Image CDN data available');
             cdnData.images = null;
         }
 
+        // Handle database
         if (databaseResponse.ok) {
             cdnData.database = await databaseResponse.json();
         } else {
@@ -260,6 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cdnData.database = null;
         }
 
+        // Handle sounds
         if (soundsResponse.ok) {
             cdnData.sounds = await soundsResponse.json();
         } else {
@@ -271,6 +291,61 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCdnSummaryCards();
         updateLoadingProgress(75);
         renderCdnCharts();
+    }
+
+    function aggregateImageData(imageDataArray) {
+        // Initialize aggregated structure
+        const aggregated = {
+            hits: {
+                rank: null,
+                typeRank: null,
+                total: 0,
+                dates: {},
+                prev: {
+                    rank: null,
+                    typeRank: null,
+                    total: 0
+                }
+            },
+            bandwidth: {
+                rank: null,
+                typeRank: null,
+                total: 0,
+                dates: {},
+                prev: {
+                    rank: null,
+                    typeRank: null,
+                    total: 0
+                }
+            }
+        };
+
+        // Aggregate data from all repos
+        for (const data of imageDataArray) {
+            // Aggregate hits totals
+            aggregated.hits.total += data.hits?.total || 0;
+            aggregated.hits.prev.total += data.hits?.prev?.total || 0;
+
+            // Aggregate bandwidth totals
+            aggregated.bandwidth.total += data.bandwidth?.total || 0;
+            aggregated.bandwidth.prev.total += data.bandwidth?.prev?.total || 0;
+
+            // Aggregate hits by date
+            if (data.hits?.dates) {
+                for (const [date, value] of Object.entries(data.hits.dates)) {
+                    aggregated.hits.dates[date] = (aggregated.hits.dates[date] || 0) + (value || 0);
+                }
+            }
+
+            // Aggregate bandwidth by date
+            if (data.bandwidth?.dates) {
+                for (const [date, value] of Object.entries(data.bandwidth.dates)) {
+                    aggregated.bandwidth.dates[date] = (aggregated.bandwidth.dates[date] || 0) + (value || 0);
+                }
+            }
+        }
+
+        return aggregated;
     }
 
     function showErrorState() {
