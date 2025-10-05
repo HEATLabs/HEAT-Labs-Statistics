@@ -477,6 +477,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function getCategoryFromPath(path) {
         if (path.includes('announcements/')) return 'Announcements';
+        if (path.includes('steam-news/')) return 'Steam News';
         if (path.includes('blog/')) return 'Blog';
         if (path.includes('bug-hunting/')) return 'Bug Hunting';
         if (path.includes('guides/')) return 'Guides';
