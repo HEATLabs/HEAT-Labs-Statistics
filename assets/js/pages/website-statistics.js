@@ -1,11 +1,11 @@
 document.addEventListener('DOMContentLoaded', function() {
     // API endpoints
     const STATS_API_URL = 'https://views.heatlabs.net/api/stats';
-    const PIXEL_MAPPING_URL = 'https://raw.githubusercontent.com/HEATLabs/Website-Configs/refs/heads/main/tracking-pixel.json';
-    const GSC_INDEX_URL = 'https://raw.githubusercontent.com/HEATLabs/Website-Configs/refs/heads/main/gsc-index.json';
+    const PIXEL_MAPPING_URL = 'https://raw.githubusercontent.com/HEATLabs/HEAT-Labs-Configs/refs/heads/main/tracking-pixel.json';
+    const GSC_INDEX_URL = 'https://raw.githubusercontent.com/HEATLabs/HEAT-Labs-Configs/refs/heads/main/gsc-index.json';
 
     // CDN API endpoints
-    const CDN_CONFIGS_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Configs';
+    const CDN_CONFIGS_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/HEAT-Labs-Configs';
     const CDN_IMAGES_URLS = [
         'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images',
         'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Tanks',
