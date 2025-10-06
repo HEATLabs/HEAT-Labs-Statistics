@@ -528,7 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function isPageIndexed(htmlFile) {
         if (!gscIndexData?.data?.pages) return false;
 
-        const pageUrl = `https://heatlabs.github.io/${htmlFile}`;
+        const pageUrl = `https://heatlabs.net/${htmlFile}`;
         return gscIndexData.data.pages.some(page =>
             page.url === pageUrl &&
             page.indexing_state === 'INDEXED' &&
