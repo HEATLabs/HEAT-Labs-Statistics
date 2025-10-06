@@ -7,15 +7,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // CDN API endpoints
     const CDN_CONFIGS_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/HEAT-Labs-Configs';
     const CDN_IMAGES_URLS = [
-        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images',
-        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Tanks',
-        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Maps',
-        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-News',
-        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Features',
-        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Guides',
-        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Blogs',
-        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Gallery',
-        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Tournaments'
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/HEAT-Labs-Images',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/HEAT-Labs-Images-Tanks',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/HEAT-Labs-Images-Maps',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/HEAT-Labs-Images-News',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/HEAT-Labs-Images-Features',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/HEAT-Labs-Images-Guides',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/HEAT-Labs-Images-Blogs',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/HEAT-Labs-Images-Gallery',
+        'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/HEAT-Labs-Images-Tournaments'
     ];
     const CDN_DATABASE_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/HEAT-Labs-Database';
     const CDN_SOUNDS_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/HEAT-Labs-Sounds';
