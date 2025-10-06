@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     // API endpoints
-    const STATS_API_URL = 'https://heatlabs-pixel-api.vercel.app/api/stats';
+    const STATS_API_URL = 'https://views.heatlabs.net/api/stats';
     const PIXEL_MAPPING_URL = 'https://raw.githubusercontent.com/HEATLabs/Website-Configs/refs/heads/main/tracking-pixel.json';
     const GSC_INDEX_URL = 'https://raw.githubusercontent.com/HEATLabs/Website-Configs/refs/heads/main/gsc-index.json';
 
