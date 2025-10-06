@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Website-Images-Tournaments'
     ];
     const CDN_DATABASE_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/HEAT-Labs-Database';
-    const CDN_SOUNDS_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/Sound-Bank';
+    const CDN_SOUNDS_URL = 'https://data.jsdelivr.com/v1/stats/packages/gh/heatlabs/HEAT-Labs-Sounds';
 
     // DOM elements
     const totalViewsEl = document.getElementById('totalViews');
